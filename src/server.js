@@ -13,7 +13,7 @@ pool.query("SELECT NOW()")
     });
 
 const productRoutes = require("./routes/product.routes");
-const dashboardRoutes = require("./routes/dashboardRoutes");   
+const dashboardRoutes = require("./routes/dashboard.routes");   
 const datacenterRoutes = require("./routes/datacenterRoutes");
 const technicienRoutes = require("./routes/technicienRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
