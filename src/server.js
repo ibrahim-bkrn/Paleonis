@@ -13,7 +13,7 @@ pool.query("SELECT NOW()")
     });
 
 const productRoutes = require("./routes/product.routes");
-
+const dashboardRoutes = require("./routes/dashboardRoutes");   
 const datacenterRoutes = require("./routes/datacenterRoutes");
 const technicienRoutes = require("./routes/technicienRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
@@ -21,7 +21,7 @@ const ticketRoutes = require("./routes/ticketRoutes");
 app.use(express.json());
 
 app.use("/api/products", productRoutes);
-app.use("/api/dashboard", dashboardRoutes); 
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/datacenters", datacenterRoutes);
 app.use("/api/technicians", technicienRoutes);
 app.use("/api/tickets", ticketRoutes);
