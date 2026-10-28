@@ -1,6 +1,8 @@
 const pool = require("../config/db"); // importer connexion bdd
 
 class Offre {
+    static CATEGORIES = ["VPS", "hebergement mutualise", "serveur dedie", "nom de domaine"];
+
     static async findAll() {
         const resultat = await pool.query( // pool nom de la variable
             "SELECT * FROM public.offre ORDER BY id_offre" //

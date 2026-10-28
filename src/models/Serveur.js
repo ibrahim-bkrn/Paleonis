@@ -1,6 +1,8 @@
 const pool = require("../config/db"); // importer connexion bdd
 
 class Serveur {
+    static STATUTS = ["en service", "maintenance", "hors service"];
+
     // Filtres optionnels : idDatacenter, statut, libre (true = sans abonnement, false = attribué)
     static async findAll({ idDatacenter, statut, libre } = {}) {
         const conditions = [];
