@@ -1,4 +1,7 @@
-const { Pool } = require("pg");
+const { Pool, types } = require("pg");
+
+// Colonnes DATE (OID 1082) renvoyées telles quelles ("2023-01-10") au lieu d'un objet Date décalé par le fuseau horaire
+types.setTypeParser(1082, (valeur) => valeur);
 
 const pool = new Pool({
     host: process.env.DB_HOST,

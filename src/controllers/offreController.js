@@ -1,4 +1,5 @@
 const Offre = require("../models/Offre");
+const FicheTechnique = require("../models/FicheTechnique");
 
 // Renvoie l'id sous forme de nombre s'il est valide, sinon null
 function lireId(valeur) {
@@ -49,13 +50,77 @@ class OffreController {
             if(!id){
                 return res.status(400).json({ erreur: "Id d'offre invalide" });
             }
-            const offres = await Offre.findById(id);
+            // Une seule réponse construite à partir des deux bases
+            const [offres, fiche] = await Promise.all([
+                Offre.findById(id),
+                FicheTechnique.findOne({ offreId: id }),
+            ]);
             if(!offres){
                 return res.status(404).json({ erreur: "Offre introuvable" });
             }
-            res.json(offres)
+            res.json({ ...offres, fiche_technique: fiche })
         } catch(erreur){
             res.status(500).json({ erreur: "Erreur serveur" })
+        }
+    }
+
+    // GET /api/catalog/:id/fiche
+    static async getFiche(req, res, next){
+        try{
+            const id = lireId(req.params.id);
+            if(!id){
+                return res.status(400).json({ erreur: "Id d'offre invalide" });
+            }
+            const offre = await Offre.findById(id);
+            if(!offre){
+                return res.status(404).json({ erreur: "Offre introuvable" });
+            }
+            const fiche = await FicheTechnique.findOne({ offreId: id });
+            if(!fiche){
+                return res.status(404).json({ erreur: "Aucune fiche technique pour cette offre" });
+            }
+            res.json(fiche);
+        }catch(erreur){
+            next(erreur);
+        }
+    }
+
+    // PUT /api/catalog/:id/fiche : crée la fiche, ou la remplace entièrement si elle existe
+    static async putFiche(req, res, next){
+        try{
+            const id = lireId(req.params.id);
+            if(!id){
+                return res.status(400).json({ erreur: "Id d'offre invalide" });
+            }
+            const corps = req.body;
+            if(!corps || typeof corps !== "object" || Array.isArray(corps)){
+                return res.status(400).json({ erreur: "Le body doit être un objet JSON" });
+            }
+            // MongoDB ne connaît pas les offres : c'est à nous de faire le travail de la clé étrangère
+            const offre = await Offre.findById(id);
+            if(!offre){
+                return res.status(404).json({ erreur: "Offre introuvable" });
+            }
+
+            // La catégorie vient de PostgreSQL, jamais du body : c'est elle qui choisit les champs obligatoires
+            const { _id, offreId, categorie, createdAt, updatedAt, ...caracteristiques } = corps;
+            const ModeleFiche = FicheTechnique.discriminators[offre.categorie];
+            const fiche = new ModeleFiche({ ...caracteristiques, offreId: id });
+            await fiche.validate();
+
+            // Validée : on remplace l'ancienne fiche (sa catégorie a pu changer si l'offre a été modifiée)
+            const ancienne = await FicheTechnique.findOneAndDelete({ offreId: id });
+            if(ancienne){
+                // On garde la date de création d'origine, Mongoose ne gère alors plus les dates lui-même
+                fiche.createdAt = ancienne.createdAt;
+                fiche.updatedAt = new Date();
+                await fiche.save({ timestamps: false });
+            }else{
+                await fiche.save();
+            }
+            res.status(ancienne ? 200 : 201).json(fiche);
+        }catch(erreur){
+            next(erreur);
         }
     }
 
@@ -100,9 +165,16 @@ class OffreController {
             if(!id){
                 return res.status(400).json({ erreur: "Id d'offre invalide" });
             }
+            // PostgreSQL d'abord : s'il refuse (offre encore abonnée), on ne touche pas à MongoDB
             const offres = await Offre.delete(id);
             if(!offres){
                 return res.status(404).json({ erreur: "Offre introuvable" });
+            }
+            // Pas de clé étrangère entre les deux bases : on supprime la fiche nous-mêmes
+            try{
+                await FicheTechnique.deleteOne({ offreId: id });
+            }catch(erreurMongo){
+                console.error(`Fiche technique orpheline pour l'offre ${id} :`, erreurMongo.message);
             }
             res.status(200).json({message: "Supprimée avec succès"});
         }catch(erreur){

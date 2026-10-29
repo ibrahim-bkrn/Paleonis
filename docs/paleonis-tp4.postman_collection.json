@@ -1,0 +1,664 @@
+{
+  "info": {
+    "name": "PaLeonis TP4",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    }
+  ],
+  "item": [
+    {
+      "name": "N1 Fiches techniques",
+      "item": [
+        {
+          "name": "Offre + fiche",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/catalog/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Fiche seule",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/catalog/2/fiche",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "2",
+                "fiche"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer/remplacer fiche VPS (200)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/catalog/1/fiche",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "1",
+                "fiche"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vcpu\": 2,\n  \"ramGo\": 4,\n  \"stockage\": {\n    \"type\": \"SSD\",\n    \"tailleGo\": 80\n  },\n  \"os\": [\n    \"Debian 12\"\n  ],\n  \"autres\": {\n    \"ipv6\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Fiche VPS sans RAM (422)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/catalog/1/fiche",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "1",
+                "fiche"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vcpu\": 2,\n  \"stockage\": {\n    \"type\": \"SSD\",\n    \"tailleGo\": 80\n  },\n  \"os\": [\n    \"Debian 12\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Fiche domaine (200)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/catalog/7/fiche",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "7",
+                "fiche"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"extension\": \".fr\",\n  \"registrar\": \"AFNIC\",\n  \"dureeEngagementMois\": 12\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Fiche offre inexistante (404)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/catalog/999/fiche",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "999",
+                "fiche"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Créer une offre sans abonnement",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/catalog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"VPS Test\",\n  \"categorie\": \"VPS\",\n  \"prix_mensuel_ht\": 5,\n  \"en_vente\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer l offre créée (remplacer l id) : supprime aussi la fiche",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/catalog/9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "9"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Supprimer une offre abonnée (409)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/catalog/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "N2 Journal d activité",
+      "item": [
+        {
+          "name": "Ajouter une alerte (201)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/servers/15/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servers",
+                "15",
+                "events"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"alerte\",\n  \"niveau\": \"critique\",\n  \"message\": \"Ventilateur HS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajouter une métrique (201)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/servers/15/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servers",
+                "15",
+                "events"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"metrique\",\n  \"cpu\": 40,\n  \"ram\": 55,\n  \"disque\": 70\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Métrique sans cpu (422)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/servers/15/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servers",
+                "15",
+                "events"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"metrique\",\n  \"ram\": 55,\n  \"disque\": 70\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Type inconnu (422)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/servers/15/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servers",
+                "15",
+                "events"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"panne\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Serveur inexistant (404)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/servers/999/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servers",
+                "999",
+                "events"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"redemarrage\",\n  \"motif\": \"test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Lister les événements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/servers/15/events?limite=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servers",
+                "15",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrer type + période",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/servers/15/events?type=alerte&debut=2026-10-21&fin=2026-10-27&limite=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servers",
+                "15",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "alerte"
+                },
+                {
+                  "key": "debut",
+                  "value": "2026-10-21"
+                },
+                {
+                  "key": "fin",
+                  "value": "2026-10-27"
+                },
+                {
+                  "key": "limite",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Statistiques par type",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/servers/15/events/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servers",
+                "15",
+                "events",
+                "stats"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "N3 Échanges sur les tickets",
+      "item": [
+        {
+          "name": "Ticket + fil de messages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tickets/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Message du client (201)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/tickets/1/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "1",
+                "messages"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auteur\": {\n    \"type\": \"client\",\n    \"id\": 1\n  },\n  \"contenu\": \"Ça remarche, merci !\",\n  \"piecesJointes\": [\n    {\n      \"nom\": \"ok.png\",\n      \"url\": \"https://files.paleonis.fr/t1/ok.png\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Message d un technicien (201)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/tickets/1/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "1",
+                "messages"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auteur\": {\n    \"type\": \"technicien\",\n    \"id\": 1\n  },\n  \"contenu\": \"Parfait, je surveille.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Autre client (403)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/tickets/1/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "1",
+                "messages"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auteur\": {\n    \"type\": \"client\",\n    \"id\": 2\n  },\n  \"contenu\": \"Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Technicien inexistant (404)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/tickets/1/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "1",
+                "messages"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auteur\": {\n    \"type\": \"technicien\",\n    \"id\": 99\n  },\n  \"contenu\": \"Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ticket fermé (409)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/tickets/5/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "5",
+                "messages"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auteur\": {\n    \"type\": \"client\",\n    \"id\": 4\n  },\n  \"contenu\": \"Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

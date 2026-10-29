@@ -1,5 +1,7 @@
 require("dotenv").config();
 const pool = require("./config/db");
+const connectMongo = require("./config/mongo");
+const gererErreurs = require("./middlewares/erreurs");
 
 const express = require("express");
 const app = express();
@@ -36,6 +38,16 @@ app.use((req, res) => {
     res.status(404).json({ message: "Page introuvable" });
 });
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log("Serveur lance sur le port 3000");
-});
+app.use(gererErreurs);
+
+// Une API à moitié connectée est pire qu'une API éteinte : sans MongoDB, on arrête tout
+connectMongo()
+    .then(() => {
+        app.listen(process.env.PORT || 3000, () => {
+            console.log(`Serveur lance sur le port ${process.env.PORT || 3000}`);
+        });
+    })
+    .catch((erreur) => {
+        console.error("Erreur de connexion à MongoDB :", erreur.message);
+        process.exit(1);
+    });

@@ -1,4 +1,6 @@
 const Ticket = require("../models/Ticket");
+const Technicien = require("../models/Technicien");
+const FilTicket = require("../models/FilTicket");
 
 // Renvoie l'id sous forme de nombre s'il est valide, sinon null
 function lireId(valeur) {
@@ -17,13 +19,65 @@ exports.getTicket = async (req, res) => {
         return res.status(400).json({ message: "Id de ticket invalide" });
     }
 
+    // Une seule réponse : le ticket (PostgreSQL) et tout son fil de messages (MongoDB)
+    const [ticket, fil] = await Promise.all([
+        Ticket.findById(id),
+        FilTicket.findOne({ ticketId: id }),
+    ]);
+
+    if (!ticket) {
+        return res.status(404).json({ message: "Ticket introuvable" });
+    }
+
+    res.status(200).json({ ...ticket, messages: fil ? fil.messages : [] });
+};
+
+// POST /api/tickets/:id/messages
+exports.addMessage = async (req, res) => {
+    const id = lireId(req.params.id);
+
+    if (!id) {
+        return res.status(400).json({ message: "Id de ticket invalide" });
+    }
+
+    const { auteur, contenu, piecesJointes } = req.body ?? {};
+
+    if (!auteur || !["client", "technicien"].includes(auteur.type) || !lireId(auteur.id) || !estTexteRempli(contenu)) {
+        return res.status(400).json({ message: "Champs obligatoires : auteur { type: client|technicien, id }, contenu" });
+    }
+
+    // MongoDB ne connaît pas les tickets : on vérifie dans PostgreSQL
     const ticket = await Ticket.findById(id);
 
     if (!ticket) {
         return res.status(404).json({ message: "Ticket introuvable" });
     }
 
-    res.status(200).json(ticket);
+    if (ticket.statut === "ferme") {
+        return res.status(409).json({ message: "Ticket fermé, il n'accepte plus de messages" });
+    }
+
+    // L'auteur doit être le client du ticket ou un technicien existant
+    if (auteur.type === "client" && Number(auteur.id) !== ticket.id_client) {
+        return res.status(403).json({ message: "Ce client n'est pas l'auteur du ticket" });
+    }
+
+    if (auteur.type === "technicien" && !(await Technicien.findById(Number(auteur.id)))) {
+        return res.status(404).json({ message: "Technicien introuvable" });
+    }
+
+    // La date est fixée par le serveur : les messages restent dans l'ordre chronologique
+    const message = { auteur: { type: auteur.type, id: Number(auteur.id) }, contenu, piecesJointes };
+    await new FilTicket({ ticketId: id, messages: [message] }).validate();
+
+    // $push est atomique ; upsert crée le fil au premier message
+    const fil = await FilTicket.findOneAndUpdate(
+        { ticketId: id },
+        { $push: { messages: message } },
+        { upsert: true, returnDocument: "after" }
+    );
+
+    res.status(201).json(fil.messages[fil.messages.length - 1]);
 };
 
 exports.createTicket = async (req, res) => {

@@ -1,5 +1,6 @@
 const net = require("net");
 const Serveur = require("../models/Serveur");
+const Evenement = require("../models/Evenement");
 
 // Renvoie l'id sous forme de nombre s'il est valide, sinon null
 function lireId(valeur) {
@@ -145,6 +146,93 @@ class ServeurController {
                 return res.status(409).json({ erreur: "Serveur attribué à un abonnement, suppression impossible" });
             }
             res.status(500).json({ erreur: "Erreur serveur" });
+        }
+    }
+
+    // POST /api/servers/:id/events
+    static async createEvenement(req, res, next){
+        try{
+            const id = lireId(req.params.id);
+            if(!id){
+                return res.status(400).json({ erreur: "Id de serveur invalide" });
+            }
+            const { type, serveurId, _id, ...infos } = req.body ?? {};
+            if(!Evenement.TYPES.includes(type)){
+                return res.status(422).json({ erreur: `Type invalide. Valeurs autorisées : ${Evenement.TYPES.join(", ")}` });
+            }
+            // MongoDB ne connaît pas les serveurs : on vérifie dans PostgreSQL
+            if(!(await Serveur.findById(id))){
+                return res.status(404).json({ erreur: "Serveur introuvable" });
+            }
+            const evenement = await Evenement.discriminators[type].create({ ...infos, serveurId: id });
+            res.status(201).json(evenement);
+        }catch(erreur){
+            next(erreur);
+        }
+    }
+
+    // GET /api/servers/:id/events?type=alerte&debut=2026-10-01&fin=2026-10-31&limite=20
+    static async listEvenements(req, res, next){
+        try{
+            const id = lireId(req.params.id);
+            if(!id){
+                return res.status(400).json({ erreur: "Id de serveur invalide" });
+            }
+            const { type, debut, fin, limite } = req.query;
+            const filtre = { serveurId: id };
+
+            if(type){
+                if(!Evenement.TYPES.includes(type)){
+                    return res.status(400).json({ erreur: `Type invalide. Valeurs autorisées : ${Evenement.TYPES.join(", ")}` });
+                }
+                filtre.type = type;
+            }
+            if(debut || fin){
+                filtre.date = {};
+                if(debut) filtre.date.$gte = new Date(debut);
+                if(fin){
+                    filtre.date.$lte = new Date(fin);
+                    // fin=2026-10-27 inclut toute la journée du 27
+                    if(/^\d{4}-\d{2}-\d{2}$/.test(fin)) filtre.date.$lte.setUTCHours(23, 59, 59, 999);
+                }
+                if(Object.values(filtre.date).some((d) => isNaN(d))){
+                    return res.status(400).json({ erreur: "debut et fin doivent être des dates valides (AAAA-MM-JJ)" });
+                }
+            }
+            const nb = limite === undefined ? 50 : Number(limite);
+            if(!Number.isInteger(nb) || nb < 1 || nb > 500){
+                return res.status(400).json({ erreur: "limite doit être un entier entre 1 et 500" });
+            }
+
+            if(!(await Serveur.findById(id))){
+                return res.status(404).json({ erreur: "Serveur introuvable" });
+            }
+            const evenements = await Evenement.find(filtre).sort({ date: -1 }).limit(nb);
+            res.json(evenements);
+        }catch(erreur){
+            next(erreur);
+        }
+    }
+
+    // GET /api/servers/:id/events/stats : nombre d'événements par type, calculé par MongoDB
+    static async statsEvenements(req, res, next){
+        try{
+            const id = lireId(req.params.id);
+            if(!id){
+                return res.status(400).json({ erreur: "Id de serveur invalide" });
+            }
+            if(!(await Serveur.findById(id))){
+                return res.status(404).json({ erreur: "Serveur introuvable" });
+            }
+            const stats = await Evenement.aggregate([
+                { $match: { serveurId: id } },
+                { $group: { _id: "$type", total: { $sum: 1 } } },
+                { $project: { _id: 0, type: "$_id", total: 1 } },
+                { $sort: { total: -1 } },
+            ]);
+            res.json({ serveurId: id, stats });
+        }catch(erreur){
+            next(erreur);
         }
     }
 }
